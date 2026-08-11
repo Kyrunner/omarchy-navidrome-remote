@@ -152,6 +152,18 @@ The liveness check costs one extra JSON-RPC per poll per controllable session,
 on a 2s timeout so a sleeping Kodi cannot stall the widget. Measured poll time
 with the check in place: 0.23s.
 
+### The uncontrollable case is weaker, and that is not fixable here
+
+A phone has no API to ask, so stopping playback there reports nothing. Its row
+survives until the extrapolated position passes the end of the track, or until
+Navidrome expires the entry — observed clearing itself on its own. So a phone
+row can outlive the music by a minute or two, where a Kodi row vanishes at once.
+
+Tightening this by treating a rising `minutesAgo` as "stopped" was considered and
+rejected: Subsonic clients differ wildly in how often they re-report, some only
+at track start, and a widget that hides while music is still playing is a worse
+failure than a row that lingers briefly after it stops.
+
 ## Opening the track in Navidrome
 
 Clicking the title opens the album that contains it. Navidrome's web UI is

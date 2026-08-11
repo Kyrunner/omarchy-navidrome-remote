@@ -58,6 +58,11 @@ Only `"type": "kodi"` is implemented. Kodi needs *Settings → Services → Cont
 Allow remote control via HTTP* turned on, and the username/password you set
 there go in `user`/`password`.
 
+When a client cannot be asked whether it is still playing, its row can outlive
+the music by a minute or two — nothing reports "stopped", so the entry survives
+until Navidrome expires it. Kodi rows disappear immediately, because Kodi can be
+asked.
+
 **Most Subsonic clients cannot be controlled at all.** Subsonic is a streaming
 protocol with no transport endpoints — the server does not own playback, so
 there is nothing to send a pause to. Phone and tablet apps generally expose no
