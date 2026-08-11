@@ -12,7 +12,7 @@
 #   {"ok":false,"error":"not configured","sessions":[]}   and a non-zero exit
 #
 # Config: ~/.config/omarchy-navidrome/config.json
-#   {"url":"http://host:4533","public_url":"https://nd.example.com",
+#   {"url":"http://host:4533","public_url":"https://navidrome.example.com",
 #    "user":"...","password":"...",
 #    "controllers":[{"player":"KodiNavidrome","type":"kodi",
 #                    "url":"http://host:8080","user":"...","password":"..."}]}

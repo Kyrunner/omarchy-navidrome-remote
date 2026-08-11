@@ -21,7 +21,7 @@ Create `~/.config/omarchy-navidrome/config.json`:
 ```json
 {
   "url": "http://192.168.1.10:4533",
-  "public_url": "https://nd.example.com",
+  "public_url": "https://navidrome.example.com",
   "user": "you",
   "password": "...",
   "controllers": [

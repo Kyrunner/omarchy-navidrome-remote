@@ -44,7 +44,7 @@ Auth is Subsonic token auth: a fresh random salt per request and
 ```json
 {
   "url": "http://192.168.1.10:4533",
-  "public_url": "https://nd.example.com",
+  "public_url": "https://navidrome.example.com",
   "user": "...",
   "password": "...",
   "controllers": [
