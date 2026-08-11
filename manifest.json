@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "ky.navidrome-remote",
+  "name": "Navidrome Remote",
+  "version": "0.1.0",
+  "author": "ky",
+  "license": "MIT",
+  "description": "What is playing on Navidrome from any device, with transport controls for clients that allow them.",
+  "kinds": ["bar-widget"],
+  "entryPoints": { "barWidget": "Panel.qml" },
+  "barWidget": {
+    "displayName": "Navidrome",
+    "description": "Shows what is playing on your Navidrome server from any client — Kodi, phone, tablet, cliamp — with a live progress bar, and play/pause/next/previous for clients that expose a remote API. Hidden while nothing is playing.",
+    "category": "Media",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "refreshIntervalSec": 5,
+      "hideWhenIdle": true
+    },
+    "schema": [
+      {
+        "key": "refreshIntervalSec",
+        "type": "integer",
+        "label": "Refresh interval (seconds, LAN)",
+        "min": 3,
+        "max": 60,
+        "step": 1,
+        "defaultValue": 5
+      },
+      {
+        "key": "hideWhenIdle",
+        "type": "boolean",
+        "label": "Hide from the bar when nothing is playing",
+        "defaultValue": true
+      }
+    ]
+  }
+}
