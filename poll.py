@@ -129,7 +129,12 @@ def main():
 
         control_error = None
         if not ctl:
-            control_error = "No remote control for %s" % player
+            # Say why the state may also be wrong, not just why the buttons are
+            # dead. Most Subsonic clients report once at track start and never
+            # mention pausing, so a paused phone keeps reading as playing -- the
+            # single most confusing thing this widget does.
+            control_error = ("No remote control for %s — its state comes from the "
+                             "client's last report, so a pause may still show as playing" % player)
         elif which == "public" and is_private_host(ctl.get("url", "")):
             # Inferred, not probed: if the poll itself had to leave the LAN, a
             # controller on a private address is unreachable by definition. Costs
@@ -160,6 +165,18 @@ def main():
         if alive is None and duration > 0 and position_ms > (duration + 15) * 1000:
             continue
 
+        # Confirmed means "we asked the client and it said yes", and nothing else.
+        #
+        # `minutesAgo` looks like report-age and is not: it is the age of the
+        # ENTRY. Measured across a resume it stayed at 1 while positionMs reset
+        # from 84403 to 1900, and before that it exactly tracked
+        # floor(positionMs/60000) -- an artefact of these clients reporting once
+        # at track start, not a freshness signal. There is no field in this API
+        # that distinguishes an extrapolated position from a measured one, so the
+        # only real confirmation is asking the client directly.
+        minutes_ago = int(e.get("minutesAgo") or 0)
+        confirmed = alive is True
+
         song_id = e.get("id") or ""
         album_id = e.get("albumId") or ""
         # Navidrome's web UI is react-admin behind hash routing. There is no
@@ -176,6 +193,8 @@ def main():
             "duration_sec": duration,
             "position_ms": position_ms,
             "paused": (e.get("state") or "playing") != "playing",
+            "confirmed": confirmed,
+            "minutes_ago": minutes_ago,
             "cover": cover_path(base, cfg, e.get("coverArt"), timeout),
             "starred": starred_state(base, cfg, song_id, timeout, cache),
             "web_url": web_url,

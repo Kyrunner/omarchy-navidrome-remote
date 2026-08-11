@@ -188,6 +188,33 @@ rejected: Subsonic clients differ wildly in how often they re-report, some only
 at track start, and a widget that hides while music is still playing is a worse
 failure than a row that lingers briefly after it stops.
 
+### What `minutesAgo` is not
+
+It looks like the age of the last client report. It is not — it is the age of the
+*entry*. Measured across a resume it stayed at `1` while `positionMs` reset from
+84403 to 1900, and before that it exactly tracked `floor(positionMs / 60000)`,
+which is an artefact of these clients reporting once at track start rather than a
+freshness signal.
+
+There is no field in this API that separates an extrapolated position from a
+measured one. So `confirmed` means one thing only: the client was asked and said
+yes. A session with no controller is never confirmed, and its row says why the
+displayed state may be wrong rather than only why its buttons are dead.
+
+### Client behaviour differs, and it is worth knowing which you have
+
+| | `play:Sub` (iOS) | Amperfy (iOS) | Kodi |
+|---|---|---|---|
+| Reports at track start | yes | yes | yes |
+| Re-reports mid-track | no | no | n/a — asked directly |
+| Reports on resume | **no** | **yes** | n/a |
+| Pause visible to the server | no | no | yes |
+
+The resume column is the one that bites: with `play:Sub`, once the entry is gone
+it cannot come back until you skip to another track. Amperfy re-reports on
+resume, though it does so with the position reset near zero, so the elapsed time
+reads from the start of the track rather than from where you resumed.
+
 ## Opening the track in Navidrome
 
 Clicking the title opens the album that contains it. Navidrome's web UI is

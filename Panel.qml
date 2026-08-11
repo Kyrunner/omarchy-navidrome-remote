@@ -289,7 +289,11 @@ Panel {
                 Rectangle {
                   height: parent.height
                   radius: parent.radius
-                  color: modelData.paused ? root.dim : root.accent
+                  // Dimmed when the position is extrapolated rather than measured:
+                  // a bar that looks identical whether or not anyone checked is a
+                  // bar that quietly overstates what is known.
+                  color: modelData.paused ? root.dim
+                         : (modelData.confirmed ? root.accent : Qt.darker(root.accent, 1.7))
                   width: modelData.duration_sec > 0
                          ? parent.width * Math.min(1, root.livePos(modelData) / modelData.duration_sec)
                          : 0
