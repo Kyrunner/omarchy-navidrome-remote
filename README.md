@@ -58,10 +58,24 @@ Only `"type": "kodi"` is implemented. Kodi needs *Settings → Services → Cont
 Allow remote control via HTTP* turned on, and the username/password you set
 there go in `user`/`password`.
 
-When a client cannot be asked whether it is still playing, its row can outlive
-the music by a minute or two — nothing reports "stopped", so the entry survives
-until Navidrome expires it. Kodi rows disappear immediately, because Kodi can be
-asked.
+### Clients that only report at track start
+
+Some Subsonic clients — `play:Sub` on iOS is one — send a single now-playing
+report when a track begins, and nothing afterwards. No pause, no resume, no stop.
+
+Navidrome extrapolates position from that one report, caps it at the track
+duration, and then deletes the entry. The practical consequences:
+
+- The row disappears when the track *would* have ended, whether or not it did.
+- **Resuming a paused track will not bring the row back.** The client never tells
+  the server, so the server cannot tell this widget. Skipping to the next track
+  does work, because a new track triggers that one report.
+- While paused, the row keeps reading as playing with a moving progress bar,
+  until it reaches the end.
+
+None of this is fixable from the plugin — the information never leaves the
+phone. A client that re-reports periodically behaves correctly, as does Kodi,
+which is asked directly on every poll.
 
 **Most Subsonic clients cannot be controlled at all.** Subsonic is a streaming
 protocol with no transport endpoints — the server does not own playback, so

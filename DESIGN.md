@@ -152,12 +152,36 @@ The liveness check costs one extra JSON-RPC per poll per controllable session,
 on a 2s timeout so a sleeping Kodi cannot stall the widget. Measured poll time
 with the check in place: 0.23s.
 
-### The uncontrollable case is weaker, and that is not fixable here
+### The uncontrollable case is weaker, and that is genuinely not fixable here
 
-A phone has no API to ask, so stopping playback there reports nothing. Its row
-survives until the extrapolated position passes the end of the track, or until
-Navidrome expires the entry — observed clearing itself on its own. So a phone
-row can outlive the music by a minute or two, where a Kodi row vanishes at once.
+A phone has no API to ask. What Navidrome actually does, observed over a 5-minute
+capture of a `play:Sub` session on iOS:
+
+```
+ 108s  state='playing'  minutesAgo=3  pos=189967  dur=192
+ 111s  state='playing'  minutesAgo=3  pos=192200  dur=192   <- capped at duration
+ 117s  (no entries)                                          <- server deletes it
+ 178s  state='playing'  minutesAgo=0  pos=2107    dur=248   <- next track: fresh report
+```
+
+Two behaviours combine badly:
+
+1. **The client reports once, at track start.** `minutesAgo` climbed 1 → 3 and
+   never reset. Pause and resume were never reported at all — `state` stayed
+   `playing` throughout.
+2. **Navidrome caps the extrapolated position at the track duration, then
+   removes the entry.** The disappearance is the server's doing, not this
+   plugin's.
+
+So **resuming a paused track cannot bring the widget back**: once the entry is
+gone, the fact that playback resumed exists only on the phone. The client never
+tells the server, so the server cannot tell the widget. Skipping to the next
+track works only because a new track triggers the client's one report.
+
+The `position > duration + 15s` fallback below therefore almost never fires
+against Navidrome, which caps position at exactly the duration. It is retained
+as a guard for servers that extrapolate without capping, not as the mechanism
+that makes this work.
 
 Tightening this by treating a rising `minutesAgo` as "stopped" was considered and
 rejected: Subsonic clients differ wildly in how often they re-report, some only
