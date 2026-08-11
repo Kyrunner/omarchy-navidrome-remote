@@ -191,10 +191,14 @@ failure than a row that lingers briefly after it stops.
 ### What `minutesAgo` is not
 
 It looks like the age of the last client report. It is not — it is the age of the
-*entry*. Measured across a resume it stayed at `1` while `positionMs` reset from
-84403 to 1900, and before that it exactly tracked `floor(positionMs / 60000)`,
-which is an artefact of these clients reporting once at track start rather than a
-freshness signal.
+*entry*, a plain minute counter from when Navidrome created it.
+
+Measured over 81 samples across four minutes, it went `0 → 1 → 2 → 3 → 4`,
+incrementing every 60s and never once resetting — including straight through a
+resume where `positionMs` dropped from 84403 to 1900. Early on it appears to
+track `floor(positionMs / 60000)`, but that is coincidence: these clients report
+at track start, so entry age and playback position advance together until
+something disturbs one of them.
 
 There is no field in this API that separates an extrapolated position from a
 measured one. So `confirmed` means one thing only: the client was asked and said
