@@ -118,11 +118,14 @@ Item {
   Readiness {
     // On the public endpoint the poll backs off hard: 17k requests a day through
     // a rate-limited public edge is a good way to get your own IP banned. The
-    // retry cadence is capped by this too, so a failing public endpoint is never
-    // hammered at retrySec.
+    // RETRY cadence follows it there rather than staying at the 5s default,
+    // because a public endpoint that is failing is exactly when hammering it
+    // gets the IP banned -- and being rate-limited is one of the ways it fails.
+    // On the LAN the default 5s retry stands: a local box does not care.
     id: readiness
     refreshIntervalSec: svc.endpoint === "public" ? Math.max(20, svc.refreshIntervalSec * 4)
                                                   : Math.max(3, svc.refreshIntervalSec)
+    retrySec: svc.endpoint === "public" ? Math.max(20, svc.refreshIntervalSec * 4) : 5
     onPoll: svc.refresh()
   }
 

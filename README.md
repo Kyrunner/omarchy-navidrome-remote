@@ -89,7 +89,7 @@ buttons with the reason.
 |---|---|
 | Bar | Vinyl icon while something is playing, dimmed when paused, hidden when idle |
 | Bar badge | Count, when more than one device is playing |
-| Bar, red `!` | Dimmed icon and a red badge: open the popup, it names the problem |
+| Bar, red `!` | Dimmed icon and a red badge: something has been wrong for 45s straight, and the popup names it |
 | Click | Show every active session |
 | Click the title | Open that album in Navidrome in your browser |
 | ♥ | Add to / remove from favourites. Works even for sessions you cannot control. |
@@ -99,13 +99,22 @@ buttons with the reason.
 | `r` in popup | Refresh now |
 | `Esc` | Close |
 
+A failure is silent until it has lasted 45 seconds. Inside that window the poll
+retries every 5s and the widget keeps showing the last known session, marked as
+last-known; if it has nothing yet — the usual case at boot, since the bar starts
+before WiFi associates — it shows nothing at all. Only 45s of *continuous*
+failure earns the red `!`, and one good poll clears it.
+
 ## Two endpoints, and why the order matters
 
 At a 5s poll this widget makes **17,280 requests a day**. Sent through a public
 edge running a rate limiter or an IP-ban daemon, that is a steady drum on your
 own defences, and tripping them bans you from your own server. So the LAN
 address is always tried first, and `public_url` is a fallback rather than an
-equal option. On the public path the poll backs off to 20s.
+equal option. On the public path the poll backs off to 20s — and so does the
+retry, so a failing public endpoint is retried every 20s rather than every 5s.
+Answering a rate limit by quadrupling the request rate is how a temporary block
+turns into a ban.
 
 The choice is remembered in `~/.local/state/omarchy-navidrome/endpoint.json`,
 because the backend runs as a fresh process on every poll and would otherwise

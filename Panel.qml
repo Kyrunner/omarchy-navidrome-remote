@@ -18,9 +18,13 @@ Panel {
   // ⛔ WITHOUT THESE THE WIDGET IS INVISIBLE. A Panel with no implicit size gets
   // allocated zero width by the bar: it loads, runs, logs nothing fatal, and
   // never appears. Nothing playing -> zero width; a FAULT keeps its width, so
-  // broken and silent never look the same.
+  // broken and silent never look the same. A failure that has NOT yet faulted is
+  // undecided, and stays zero-width ONLY while there is nothing to show -- which
+  // is the case at boot, before the first poll has ever landed. Once sessions are
+  // known the widget keeps showing them (marked stale) through a failing poll, so
+  // a mid-session blip cannot make it vanish under an open popout.
   implicitWidth: (nd.ok && nd.count === 0 && root.hideWhenIdle)
-                 || (!nd.ok && !nd.faulted)
+                 || (!nd.ok && !nd.faulted && nd.count === 0)
                  ? 0 : button.implicitWidth
   implicitHeight: button.implicitHeight
 
@@ -91,14 +95,14 @@ Panel {
           height: Math.round(parent.height * 0.46)
           width: Math.max(height, badgeText.implicitWidth + Style.space(4))
           radius: height / 2
-          color: nd.ok ? root.accent : root.urgent
+          color: nd.faulted ? root.urgent : root.accent
           border.width: 1
           border.color: root.background
 
           Text {
             id: badgeText
             anchors.centerIn: parent
-            text: nd.ok ? String(nd.count) : "!"
+            text: nd.faulted ? "!" : String(nd.count)
             color: root.background
             font.family: root.fontFamily
             font.pixelSize: Math.round(badge.height * 0.7)

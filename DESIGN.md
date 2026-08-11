@@ -61,7 +61,11 @@ getting banned. The LAN path is therefore the default, not merely the fast one.
 
 `public_url` exists so the widget keeps working away from home, where it backs
 off to a 20s poll — still responsive enough to track song changes, far below any
-sane rate limit.
+sane rate limit. The **retry** cadence follows the endpoint too: a failing poll
+normally retries every 5s, but on the public path it retries at the backed-off
+20s instead. Being rate-limited is one of the ways that path fails, and answering
+a rate limit by quadrupling the request rate is how a temporary block becomes a
+ban.
 
 ### Endpoint selection is persisted, because the backend is not a daemon
 
@@ -108,10 +112,32 @@ re-fetched on every poll. The cache is capped at 100 files, evicted oldest-first
 | One session playing | vinyl icon |
 | One session paused | vinyl icon, dimmed |
 | More than one session | vinyl icon + count badge |
-| not configured / unreachable / auth failed | dimmed icon + red `!` |
+| Failing < 45s, nothing known yet | hidden — the boot case, before the first poll lands |
+| Failing < 45s, sessions known | unchanged: last known session, popup marks it last-known |
+| not configured / unreachable / auth failed for 45s | dimmed icon + red `!` |
 
 A fault keeps its width instead of collapsing, so "broken" and "nothing playing"
-never look the same.
+never look the same. The undecided window is the one case that hides rather than
+keeping its width, and only when there is nothing to show — a widget that has a
+session keeps showing it rather than blinking out of the bar mid-session.
+
+## The grace window
+
+The bar starts about ten seconds before WiFi associates, so the first poll of
+every boot fails. Rendering that is a lie with a red badge on it.
+
+`Readiness.qml` (logic in `Readiness.js`, tested with `node Readiness.test.js`)
+holds the rule, and it is uniform — there is no startup special case. **A failure
+is silent until it has lasted 45 seconds of continuous failing.** It retries at
+5s meanwhile (20s on the public endpoint, as above), and one success anywhere in
+that window resets the clock. So a boot is quiet, a blip is quiet, and a
+genuinely dead server still speaks up within a minute or so.
+
+That 45s is real elapsed time, accumulated one poll at a time with each interval
+sanity-checked against the delay actually scheduled. It has to be:
+`systemd-timesyncd` makes its first correction inside this very window, and a
+suspend moves the clock by hours. A step in either direction is credited as one
+scheduled interval, so it can neither manufacture a fault nor hide one.
 
 ## Popup
 
