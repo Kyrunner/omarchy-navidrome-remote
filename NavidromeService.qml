@@ -17,6 +17,13 @@ Item {
   property var sessions: []
   property bool stale: false
 
+  // True only once a failure has persisted past the grace window, or when the
+  // problem is a configuration one, which is never transient. Panels render
+  // errors from this, not from !ok, so a cold boot stays quiet.
+  readonly property bool faulted: readiness.faulted
+                                  || svc.error === "not configured"
+                                  || svc.error === "bad config"
+
   // Seconds since the last authoritative poll. The panel adds this to a
   // session's position so the progress bar creeps every second instead of
   // jumping by refreshIntervalSec. The poll resets it, so drift can never
@@ -46,7 +53,7 @@ Item {
     stdout: StdioCollector {
       onStreamFinished: {
         var raw = this.text ? this.text.trim() : ""
-        if (raw === "") { svc.stale = svc.count > 0; svc.ok = false; svc.error = "no output"; return }
+        if (raw === "") { svc.stale = svc.count > 0; svc.ok = false; svc.error = "no output"; readiness.failed(); return }
         try {
           var d = JSON.parse(raw)
           svc.ok = !!d.ok
@@ -56,11 +63,14 @@ Item {
             svc.endpoint = d.endpoint || ""
             svc.stale = false
             svc.tick = 0
+            readiness.succeeded()
           } else {
             svc.stale = svc.count > 0
+            readiness.failed()
           }
         } catch (e) {
           svc.ok = false; svc.error = "unparseable"; svc.stale = svc.count > 0
+          readiness.failed()
         }
       }
     }
@@ -105,15 +115,15 @@ Item {
     action.running = true
   }
 
-  Timer {
+  Readiness {
     // On the public endpoint the poll backs off hard: 17k requests a day through
-    // a rate-limited public edge is a good way to get your own IP banned.
-    interval: (svc.endpoint === "public" ? Math.max(20, svc.refreshIntervalSec * 4)
-                                         : Math.max(3, svc.refreshIntervalSec)) * 1000
-    running: true
-    repeat: true
-    triggeredOnStart: true
-    onTriggered: svc.refresh()
+    // a rate-limited public edge is a good way to get your own IP banned. The
+    // retry cadence is capped by this too, so a failing public endpoint is never
+    // hammered at retrySec.
+    id: readiness
+    refreshIntervalSec: svc.endpoint === "public" ? Math.max(20, svc.refreshIntervalSec * 4)
+                                                  : Math.max(3, svc.refreshIntervalSec)
+    onPoll: svc.refresh()
   }
 
   // 1 Hz clock for the live progress bar. Gated on something actually playing so

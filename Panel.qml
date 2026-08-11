@@ -19,7 +19,9 @@ Panel {
   // allocated zero width by the bar: it loads, runs, logs nothing fatal, and
   // never appears. Nothing playing -> zero width; a FAULT keeps its width, so
   // broken and silent never look the same.
-  implicitWidth: (nd.ok && nd.count === 0 && root.hideWhenIdle) ? 0 : button.implicitWidth
+  implicitWidth: (nd.ok && nd.count === 0 && root.hideWhenIdle)
+                 || (!nd.ok && !nd.faulted)
+                 ? 0 : button.implicitWidth
   implicitHeight: button.implicitHeight
 
   readonly property color foreground: bar ? bar.foreground : Color.foreground
@@ -75,7 +77,7 @@ Panel {
           sourceSize.height: 64
           fillMode: Image.PreserveAspectFit
           smooth: true
-          opacity: !nd.ok ? 0.55 : (nd.anyPlaying ? 1.0 : 0.6)
+          opacity: nd.faulted ? 0.55 : (nd.anyPlaying ? 1.0 : 0.6)
         }
 
         // Count when more than one device is going, "!" on a fault. A fault takes
@@ -83,7 +85,7 @@ Panel {
         // as a quiet one.
         Rectangle {
           id: badge
-          visible: !nd.ok || nd.count > 1
+          visible: nd.faulted || nd.count > 1
           anchors.right: parent.right
           anchors.top: parent.top
           height: Math.round(parent.height * 0.46)
@@ -173,7 +175,7 @@ Panel {
 
           Text {
             Layout.fillWidth: true
-            visible: !nd.ok
+            visible: nd.faulted
             text: "Not available — " + nd.error + (nd.stale ? " (showing last known)" : "")
             color: root.urgent
             font.family: root.fontFamily
@@ -182,7 +184,7 @@ Panel {
 
           Text {
             Layout.fillWidth: true
-            visible: !nd.ok && nd.error === "not configured"
+            visible: nd.faulted && nd.error === "not configured"
             text: "Create ~/.config/omarchy-navidrome/config.json with url, user and password."
             color: root.dim
             font.family: root.fontFamily
