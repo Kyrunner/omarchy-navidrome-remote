@@ -100,10 +100,12 @@ buttons with the reason.
 | `Esc` | Close |
 
 A failure is silent until it has lasted 45 seconds. Inside that window the poll
-retries every 5s and the widget keeps showing the last known session, marked as
-last-known; if it has nothing yet — the usual case at boot, since the bar starts
-before WiFi associates — it shows nothing at all. Only 45s of *continuous*
-failure earns the red `!`, and one good poll clears it.
+retries every 5s — or 20s on the public path, matching its backed-off interval —
+and the widget keeps showing the last known session, unmarked; only the hover
+tooltip flags it as stale. If it has nothing yet — the usual case at boot, since
+the bar starts before WiFi associates — it shows nothing at all. Only 45s of
+*continuous* failure earns the red `!`, marks the popup itself last-known, and
+one good poll clears it.
 
 ## Two endpoints, and why the order matters
 

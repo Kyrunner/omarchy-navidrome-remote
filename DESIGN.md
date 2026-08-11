@@ -113,7 +113,7 @@ re-fetched on every poll. The cache is capped at 100 files, evicted oldest-first
 | One session paused | vinyl icon, dimmed |
 | More than one session | vinyl icon + count badge |
 | Failing < 45s, nothing known yet | hidden — the boot case, before the first poll lands |
-| Failing < 45s, sessions known | unchanged: last known session, popup marks it last-known |
+| Failing < 45s, sessions known | unchanged: last known session, unmarked — only the hover tooltip flags it as stale |
 | not configured / unreachable / auth failed for 45s | dimmed icon + red `!` |
 
 A fault keeps its width instead of collapsing, so "broken" and "nothing playing"
