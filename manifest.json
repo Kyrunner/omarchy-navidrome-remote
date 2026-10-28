@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "ky.navidrome-remote",
   "name": "Navidrome Remote",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "ky",
   "license": "MIT",
   "description": "What is playing on Navidrome from any device, with transport controls for clients that allow them.",
