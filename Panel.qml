@@ -64,14 +64,16 @@ Panel {
   BarIconButton {
     id: button
     anchors.fill: parent
+    // A zero-width slot still paints its icon over the neighbours in 4.5.
+    visible: root.implicitWidth > 0
     bar: root.bar
     // iconComponent hides the glyph Text (BarIconButton.qml:32), so `text` stays
     // empty or both would count as content.
     text: ""
     iconComponent: Component {
+      // No anchors: Omarchy 4.5's BarIconContent sizes an unsized wrapper to the
+      // icon canvas itself. anchors.fill on the Loader collapses it to 0x0.
       Item {
-        anchors.fill: parent
-
         Image {
           anchors.fill: parent
           source: Qt.resolvedUrl("navidrome.svg")
